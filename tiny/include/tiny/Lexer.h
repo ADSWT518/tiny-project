@@ -12,6 +12,7 @@
 
 #include <memory>
 #include <string>
+#include <iostream>
 
 namespace tiny {
 
@@ -138,35 +139,33 @@ private:
     //      3) If there are numbers in the name, they should be at the end of the name. 
     //      For example, these names are valid: a123, b_4, placeholder
   
-    //Hints: 1. You can refer to the implementaion of identifying a "number" in the same function.
+    //Hints: 1. You can refer to the implementation of identifying a "number" in the same function.
     //       2. Some functions that might be useful:  isalpha(); isalnum();
     //       3. Maybe it is better for you to go through the whole lexer before you get started.
 
-   if(isalpha(lastChar)){
+    if (isalpha(lastChar)) {
       std::string varStr;
-      bool is_digit_end = true, is_error = flase;
+      bool no_digit = true, is_error = false;
       do {
-        if(isdigit(lastChar)){
-          is_digit_end = false;
+        if (isdigit(lastChar)) {
+          no_digit = false;
         }
-        if(!is_digit_end){
-          if(isalpha(lastChar)||lastChar == '_')
-                {
-                  std::cout<<"inlegal varName"<<endl;
-                  is_error = true;
-                  break;
-                }
+        if (!no_digit) {
+          if (isalpha(lastChar) || lastChar == '_') {
+            is_error = true;
+            break;
+          }
         }
         varStr += lastChar;
         lastChar = Token(getNextChar());
-      } while(isalnum(lastChar)||lastChar == '_');
-
-      if(is_error);
-      if(varStr == "return") return tok_return;
-      if(varStr == "def") return tok_def;
-      if(varStr == "var") return tok_var;
-      identifierStr = varStr;
-      return tok_identifier;
+      } while (isalnum(lastChar) || lastChar == '_');
+      if (!is_error) {
+        if (varStr == "return") return tok_return;
+        if (varStr == "def") return tok_def;
+        if (varStr == "var") return tok_var;
+        identifierStr = varStr;
+        return tok_identifier;
+      }
     }
      
     // Identify a number: [0-9] ([0-9.])*

@@ -353,23 +353,39 @@ private:
   /// shape_list ::= num | num , shape_list
   // TODO: make an extension to support the new type like var a[2][3] = [1, 2, 3, 4, 5, 6];
   std::unique_ptr<VarType> parseType() {
-    if (lexer.getCurToken() != '<')
-      return parseError<VarType>("<", "to begin type");
-    lexer.getNextToken(); // eat <
+    if (lexer.getCurToken() != '<' && lexer.getCurToken() != '[')
+      return parseError<VarType>("< or [", "to begin type");
+    else if (lexer.getCurToken() == '<') {
+      lexer.getNextToken(); // eat <
 
-    auto type = std::make_unique<VarType>();
+      auto type = std::make_unique<VarType>();
 
-    while (lexer.getCurToken() == tok_number) {
-      type->shape.push_back(lexer.getValue());
-      lexer.getNextToken();
-      if (lexer.getCurToken() == ',')
+      while (lexer.getCurToken() == tok_number) {
+        type->shape.push_back(lexer.getValue());
         lexer.getNextToken();
-    }
+        if (lexer.getCurToken() == ',')
+          lexer.getNextToken();
+      }
 
-    if (lexer.getCurToken() != '>')
-      return parseError<VarType>(">", "to end type");
-    lexer.getNextToken(); // eat >
-    return type;
+      if (lexer.getCurToken() != '>')
+        return parseError<VarType>(">", "to end type");
+      lexer.getNextToken(); // eat >
+      return type;
+    } else if (lexer.getCurToken() == '[') {
+      auto type = std::make_unique<VarType>();
+      while (lexer.getCurToken() == '[') {
+        lexer.getNextToken(); // eat [
+        if (lexer.getCurToken() == tok_number) {
+          type->shape.push_back(lexer.getValue());
+          lexer.getNextToken();
+        }
+        if (lexer.getCurToken() != ']')
+          return parseError<VarType>("]", "to end shape");
+        lexer.getNextToken(); // eat ]
+      }
+      return type;
+    }
+    return nullptr;
   }
 
   /// Parse either a variable declaration or a call expression.
@@ -444,28 +460,28 @@ private:
   std::unique_ptr<VarDeclExprAST>
   parseVarDeclaration(bool requiresInitializer) {
 
+    auto loc = lexer.getLastLocation();
+
     // TODO: check to see if this is a 'var' declaration 
-    //       If not, report the error with 'parseError', otherwise eat 'var'  
-    /* 
-     *
-     *  Write your code here.
-     *
-     */
+    //       If not, report the error with 'parseError', otherwise eat 'var'
+
+    if (lexer.getCurToken() != tok_var)
+      return parseError<VarDeclExprAST>("var", "in variable declaration");
+    lexer.getNextToken(); // eat var
 
     // TODO: check to see if this is a variable name 
     //       If not, report the error with 'parseError'
-    /* 
-     *
-     *  Write your code here.
-     *
-     */
+
+    if (lexer.getCurToken() != tok_identifier)
+        return parseError<VarDeclExprAST>("identified", "after 'var' declaration");
+
     // eat the variable name
     std::string id(lexer.getId());
     lexer.getNextToken(); // eat id
 
-    std::unique_ptr<VarType> type; 
+    std::unique_ptr<VarType> type;
     // TODO: modify code to additionally support the third method: var a[][] = ... 
-    if (lexer.getCurToken() == '<') {
+    if (lexer.getCurToken() == '<' || lexer.getCurToken() == '[') {
       type = parseType();
       if (!type)
         return nullptr;
