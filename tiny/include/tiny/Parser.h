@@ -371,7 +371,8 @@ private:
         return parseError<VarType>(">", "to end type");
       lexer.getNextToken(); // eat >
       return type;
-    } else if (lexer.getCurToken() == '[') {
+    } else {
+      // our work for processing [] symbol
       auto type = std::make_unique<VarType>();
       while (lexer.getCurToken() == '[') {
         lexer.getNextToken(); // eat [
@@ -385,7 +386,6 @@ private:
       }
       return type;
     }
-    return nullptr;
   }
 
   /// Parse either a variable declaration or a call expression.
